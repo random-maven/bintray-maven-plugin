@@ -5,20 +5,25 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.carrotgarden.maven/bintray-maven-plugin/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.carrotgarden.maven/bintray-maven-plugin)
 [![Bintray Download](https://api.bintray.com/packages/random-maven/maven/bintray-maven-plugin/images/download.svg) ](https://bintray.com/random-maven/maven/bintray-maven-plugin/_latestVersion)
 
-Similar to [devexperts/bintray-maven-plugin](https://github.com/Devexperts/bintray-maven-plugin)
+Similar plugins
+* [devexperts/bintray-maven-plugin](https://github.com/Devexperts/bintray-maven-plugin)
 
-Features:
-* auto create of bintray package
-* auto cleanup of bintray versions
-* preserve selected versions by regex
+Plugin features
+* bintray target package removal
+* create bintray target package on-demand
+* automatic cleanup of old bintray target versions
+* preservation of selected versions from cleanup by regex
 
-Maven goals:
+Maven goals
 * [bintary:deploy](https://random-maven.github.io/bintray-maven-plugin/deploy-mojo.html)
 
-Usage example:
-```
+Usage example
+```xml
+        <profile>
+            <id>distro-bintray</id>
             <build>
                 <plugins>
+                    <!-- Disable default deployer. -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-deploy-plugin</artifactId>
@@ -26,12 +31,18 @@ Usage example:
                             <skip>true</skip>
                         </configuration>
                     </plugin>
+                    <!-- Enable alternative deployer. -->
                     <plugin>
                         <groupId>com.carrotgarden.maven</groupId>
                         <artifactId>bintray-maven-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
-                            <subject>${bintray.subject}</subject>
+                            <!-- Bintray oranization name. -->
+                            <subject>random-maven</subject>
+                            <!-- Bintray target repository. -->
+                            <mavenRepo>maven</mavenRepo>
+                            <!-- Bintray credentials in settings.xml. -->
+                            <serverId>distro-bintary</serverId>
                         </configuration>
                         <executions>
                             <execution>
@@ -43,4 +54,5 @@ Usage example:
                     </plugin>
                 </plugins>
             </build>
+        </profile>
 ```
