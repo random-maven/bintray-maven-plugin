@@ -1,0 +1,12 @@
+
+# eclipse
+
+.project
+.classpath
+.settings/
+
+# maven
+
+target/
+*.flatten
+

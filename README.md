@@ -1,1 +1,0 @@
-# maven-bintray-plugin
