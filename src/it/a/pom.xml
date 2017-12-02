@@ -17,23 +17,11 @@
     <modules>
         <module>../test-1</module>
         <module>../test-2</module>
+        <module>../test-3</module>
     </modules>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.carrotgarden.maven</groupId>
-                <artifactId>bintray-maven-plugin</artifactId>
-                <version>@project.version@</version>
-                <configuration>
-                    <subject>random-maven</subject>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

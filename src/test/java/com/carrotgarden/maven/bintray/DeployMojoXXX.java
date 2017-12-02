@@ -50,75 +50,75 @@ import okhttp3.Route;
  * </ul>
  */
 @Mojo(name = "deploy", defaultPhase = LifecyclePhase.DEPLOY, requiresProject = true)
-public class DeployMojo extends AbstractDeployMojo {
+public class DeployMojoXXX extends AbstractDeployMojo {
 
 	/**
 	 * Bintray rest api url. Entry point to the bintray resource management.
 	 */
 	@Parameter(property = "bintray.restApiUrl", defaultValue = "https://bintray.com/api/v1")
-	private String restApiUrl;
+	String restApiUrl;
 
 	/**
 	 * Bintray user or organization name which contains target maven repository
 	 * {@link #mavenRepo}.
 	 */
 	@Parameter(property = "bintray.subject", defaultValue = "${user.name}")
-	private String subject;
+	String subject;
 
 	/**
 	 * Bintray target maven repository name. Repository must already exist for the
 	 * bintray {@link #subject}.
 	 */
 	@Parameter(property = "bintray.mavenRepo", defaultValue = "maven")
-	private String mavenRepo;
+	String mavenRepo;
 
 	/**
 	 * Bintray target repository package. Package can be optionally created on
 	 * demand before deployment via {@link #performEnsure}.
 	 */
 	@Parameter(property = "bintray.packageName", defaultValue = "${project.artifactId}")
-	private String packageName;
+	String packageName;
 
 	/**
 	 * Bintray rest-api-user for authentication. When missing, uses
 	 * {@link #serverId}: {server/username} from settings.xml.
 	 */
 	@Parameter(property = "bintray.username")
-	private String username;
+	String username;
 
 	/**
 	 * Bintray rest-api-token for authentication. When missing, uses
 	 * {@link #serverId}: {server/password} from settings.xml.
 	 */
 	@Parameter(property = "bintray.password")
-	private String password;
+	String password;
 
 	/**
 	 * Server id for credentials lookup via {@link serverId}: { server/username,
 	 * server/password } in maven settings.xml.
 	 */
 	@Parameter(property = "bintray.serverId", defaultValue = "distro-bintray")
-	private String serverId;
+	String serverId;
 
 	/**
 	 * Bintray package create definition parameter: version control system url.
 	 */
 	@Parameter(property = "bintray.packageVcsUrl", defaultValue = "${project.url}")
-	private String packageVcsUrl;
+	String packageVcsUrl;
 
 	/**
 	 * Bintray package create definition parameter: licenses list to attach to the
 	 * target package.
 	 */
 	@Parameter(property = "bintray.packageLicenses", defaultValue = "Apache-2.0")
-	private String[] packageLicenses;
+	String[] packageLicenses;
 
 	/**
 	 * Deploy step 1: optionally remove target bintray package with all versions and
 	 * files.
 	 */
 	@Parameter(property = "bintray.performDestroy", defaultValue = "false")
-	private boolean performDestroy;
+	boolean performDestroy;
 
 	/**
 	 * Deploy step 2: optionally create target bintray package before deployment.
@@ -126,21 +126,21 @@ public class DeployMojo extends AbstractDeployMojo {
 	 * {@link #packageLicenses}
 	 */
 	@Parameter(property = "bintray.performEnsure", defaultValue = "true")
-	private boolean performEnsure;
+	boolean performEnsure;
 
 	/**
 	 * Deploy step 3: actually do invoke artifact deployment to the target
 	 * repository.
 	 */
 	@Parameter(property = "bintray.performDeploy", defaultValue = "true")
-	private boolean performDeploy;
+	boolean performDeploy;
 
 	/**
 	 * Deploy step 4: optionally mark deployment artifact as "published for bintray
 	 * consumption" after the deployment.
 	 */
 	@Parameter(property = "bintray.performPublish", defaultValue = "true")
-	private boolean performPublish;
+	boolean performPublish;
 
 	/**
 	 * Deploy step 5: optionally remove previous versions with files from target
@@ -148,20 +148,20 @@ public class DeployMojo extends AbstractDeployMojo {
 	 * {@link #preserveRegex}.
 	 */
 	@Parameter(property = "bintray.performCleanup", defaultValue = "true")
-	private boolean performCleanup;
+	boolean performCleanup;
 
 	/**
 	 * Deploy behaviour: during deployment cleanup, preserve versions with the
 	 * version description matching given java regular expression.
 	 */
 	@Parameter(property = "bintray.preserveRegex", defaultValue = "(PRESERVE)")
-	private String preserveRegex;
+	String preserveRegex;
 
 	/**
 	 * Optionally skip all steps of the deployment execution.
 	 */
 	@Parameter(property = "maven.deploy.skip", defaultValue = "false")
-	private boolean skip;
+	boolean skip;
 
 	/**
 	 * Parameter used to control how many times a failed deployment will be retried
@@ -169,49 +169,49 @@ public class DeployMojo extends AbstractDeployMojo {
 	 * it will be pulled to the nearest value within the range 1-10.
 	 */
 	@Parameter(property = "retryFailedDeploymentCount", defaultValue = "1")
-	private int retryFailedDeploymentCount;
+	int retryFailedDeploymentCount;
 
 	/**
 	 * Maven project providing deployment artifacts.
 	 */
 	@Parameter(defaultValue = "${project}", required = true, readonly = true)
-	private MavenProject project;
+	MavenProject project;
 
 	/**
 	 * Expose server credentials from settings.xml.
 	 */
 	@Parameter(defaultValue = "${settings}", required = true, readonly = true)
-	private Settings settings;
+	Settings settings;
 
 	/**
 	 * Maven session during execution.
 	 */
 	@Parameter(defaultValue = "${session}", required = true, readonly = true)
-	private MavenSession session;
+	MavenSession session;
 
 	/**
 	 * Repository materialization factory.
 	 */
 	@Component
-	private ArtifactRepositoryFactory repositoryFactory;
+	ArtifactRepositoryFactory repositoryFactory;
 
 	/**
 	 * Repository layout definitions.
 	 */
 	@Component(role = ArtifactRepositoryLayout.class)
-	private Map<String, ArtifactRepositoryLayout> repositoryLayouts;
+	Map<String, ArtifactRepositoryLayout> repositoryLayouts;
 
 	/**
 	 * Location of deployment artifact.
 	 */
 	@Parameter(property = "project.build.finalName", required = false, readonly = true)
-	private String finalName;
+	String finalName;
 
 	/**
 	 * Location of deployment artifact.
 	 */
 	@Parameter(property = "project.build.directory", required = false, readonly = true)
-	private String buildDirectory;
+	String buildDirectory;
 
 	/**
 	 * Bintray rest api data format.
@@ -225,8 +225,8 @@ public class DeployMojo extends AbstractDeployMojo {
 	Authenticator authenticator = new Authenticator() {
 		@Override
 		public Request authenticate(Route route, Response response) throws IOException {
-			String username = DeployMojo.this.username;
-			String password = DeployMojo.this.password;
+			String username = DeployMojoXXX.this.username;
+			String password = DeployMojoXXX.this.password;
 			if (username == null || password == null) {
 				Server server = settings.getServer(serverId);
 				if (server != null) {

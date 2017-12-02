@@ -24,10 +24,26 @@
     </licenses>
 
     <name>Bintray Maven Plugin</name>
-    <description>Deploy maven project artifacts to existing bintray maven repository</description>
+    <description>
+      Deploy maven project artifacts to existing bintray maven repository.
+      Upload eclipse p2 repository artifacts to existing bintray eclipse repository.
+    </description>
+
+    <repositories>
+        <repository>
+            <id>random-maven</id>
+            <url>https://dl.bintray.com/random-maven/maven/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>random-maven</id>
+            <url>https://dl.bintray.com/random-maven/maven/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <properties>
-        <release.epoch>1.0</release.epoch>
+        <release.epoch>1.1</release.epoch>
         <version.maven>3.5.0</version.maven>
         <bintray.subject>random-maven</bintray.subject>
     </properties>
@@ -56,12 +72,19 @@
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <version>3.5</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-deploy-plugin</artifactId>
             <version>2.8.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.sonatype.plexus</groupId>
+            <artifactId>plexus-build-api</artifactId>
+            <version>0.0.7</version>
         </dependency>
 
         <dependency>
@@ -76,27 +99,29 @@
             <version>20171018</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scalameta</groupId>
+            <artifactId>scalameta_${version.scala.gen}</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalameta</groupId>
+            <artifactId>contrib_${version.scala.gen}</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
-    <profiles>
-        <profile>
-            <id>invoke</id>
-        </profile>
-    </profiles>
 
     <build>
         <plugins>
 
-            <!-- Expose pom.xml data. -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-                <configuration>
-                    <flattenMode>oss</flattenMode>
-                </configuration>
-            </plugin>
-
-            <!-- Generate plugin descriptor. -->
+            <!-- Generate plugin.xml descriptor. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
@@ -104,6 +129,7 @@
                     <goalPrefix>bintray</goalPrefix>
                 </configuration>
             </plugin>
+
 
             <!-- Invoke integration tests. -->
             <plugin>
@@ -114,8 +140,7 @@
                     <streamLogs>true</streamLogs>
                     <goals>
                         <goal>clean</goal>
-                        <goal>package</goal>
-                        <goal>bintray:deploy</goal>
+                        <goal>deploy</goal>
                     </goals>
                 </configuration>
             </plugin>
@@ -125,7 +150,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
             </plugin>
-
 
             <!-- Deploy documentation site to github. -->
             <plugin>

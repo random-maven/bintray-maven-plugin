@@ -100,8 +100,8 @@
 
         <!-- Carrot Garden external repository. -->
         <repo.sonatype.release.url>https://oss.sonatype.org/content/repositories/releases</repo.sonatype.release.url>
-        <repo.sonatype.staging.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</repo.sonatype.staging.url>
         <repo.sonatype.snapshots.url>https://oss.sonatype.org/content/repositories/snapshots</repo.sonatype.snapshots.url>
+        <repo.sonatype.deployment.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</repo.sonatype.deployment.url>
 
         <!-- See maven-release-plugin. -->
         <release.profiles />
@@ -122,10 +122,6 @@
         <revision>${release.epoch}.${release.stamp}</revision>
 
     </properties>
-
-    <prerequisites>
-        <maven>${version.maven}</maven>
-    </prerequisites>
 
     <dependencyManagement>
         <dependencies>
@@ -220,7 +216,13 @@
             <dependency><!-- runtime -->
                 <groupId>org.scalameta</groupId>
                 <artifactId>scalameta_${version.scala.gen}</artifactId>
-                <version>2.1.2</version>
+                <version>2.1.3</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalameta</groupId>
+                <artifactId>contrib_${version.scala.gen}</artifactId>
+                <version>2.1.3</version>
                 <scope>provided</scope>
             </dependency>
             <dependency><!-- runtime -->
@@ -1315,6 +1317,24 @@
             <plugins>
 
                 <plugin>
+                    <groupId>com.carrotgarden.maven</groupId>
+                    <artifactId>flatten-maven-plugin</artifactId>
+                    <version>1.0.20171129163300</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>com.carrotgarden.maven</groupId>
+                    <artifactId>bintray-maven-plugin</artifactId>
+                    <version>1.0.20171128181137</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>flatten-maven-plugin</artifactId>
+                    <version>1.0.1</version>
+                </plugin>
+
+                <plugin>
                     <groupId>com.google.code.maven-replacer-plugin</groupId>
                     <artifactId>replacer</artifactId>
                     <version>1.5.3</version>
@@ -1340,12 +1360,6 @@
                     <configuration>
                         <rulesUri>https://raw.githubusercontent.com/random-maven/meta-info/master/maven-version-rules.xml</rulesUri>
                     </configuration>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>flatten-maven-plugin</artifactId>
-                    <version>1.0.1</version>
                 </plugin>
 
                 <plugin>
@@ -1754,9 +1768,133 @@
 
     </build>
 
+    <!-- Plugin development. -->
+    <pluginRepositories>
+        <!-- <pluginRepository> -->
+        <!-- <id>random-maven</id> -->
+        <!-- <url>https://dl.bintray.com/random-maven/maven</url> -->
+        <!-- </pluginRepository> -->
+        <!-- <pluginRepository> -->
+        <!-- <id>sonatype-releases</id> -->
+        <!-- <url>https://oss.sonatype.org/content/repositories/releases/</url> -->
+        <!-- </pluginRepository> -->
+        <!-- <pluginRepository> -->
+        <!-- <id>sonatype-comcarrotgarden</id> -->
+        <!-- <url>https://oss.sonatype.org/content/repositories/comcarrotgarden-1027/</url> -->
+        <!-- </pluginRepository> -->
+    </pluginRepositories>
+
     <profiles>
 
-        <!-- Bintray scala deployment. -->
+        <!-- Produce simple deployment pom.xml -->
+        <profile>
+            <id>flatten</id>
+            <activation>
+                <file>
+                    <missing>pom-no-flatten.md</missing>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Produce clean pom.xml -->
+                    <plugin>
+                        <groupId>com.carrotgarden.maven</groupId>
+                        <artifactId>flatten-maven-plugin</artifactId>
+                        <configuration>
+                            <memberRemoveList>
+                                <member>parent</member>
+                                <member>properties</member>
+                                <member>distributionManagement</member>
+                                <member>dependencyManagement</member>
+                                <member>repositories</member>
+                                <member>pluginRepositories</member>
+                                <member>build</member>
+                                <member>profiles</member>
+                                <member>reporting</member>
+                            </memberRemoveList>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>flatten</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Produce bill of materials pom.xml -->
+        <profile>
+            <id>resolve</id>
+            <activation>
+                <file>
+                    <exists>pom-resolve.md</exists>
+                </file>
+            </activation>
+            <properties>
+                <!-- Absolute path to generated pom.xml -->
+                <resolve.pomFile>${project.pomFile}.resolve</resolve.pomFile>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Produce clean pom.xml with transitive dependencies -->
+                    <plugin>
+                        <groupId>com.carrotgarden.maven</groupId>
+                        <artifactId>flatten-maven-plugin</artifactId>
+                        <configuration>
+                            <memberRemoveList>
+                                <member>parent</member>
+                                <member>properties</member>
+                                <member>distributionManagement</member>
+                                <member>dependencyManagement</member>
+                                <member>repositories</member>
+                                <member>pluginRepositories</member>
+                                <member>build</member>
+                                <member>profiles</member>
+                                <member>reporting</member>
+                            </memberRemoveList>
+                            <targetPomFile>${resolve.pomFile}</targetPomFile>
+                            <excludeTransitive>false</excludeTransitive>
+                            <packagingSwitchList>
+                                <packaging>pom</packaging>
+                            </packagingSwitchList>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>flatten</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Bintray plugins. -->
+        <profile>
+            <id>repos-random-maven</id>
+            <activation>
+                <file>
+                    <exists>pom-repos-random-maven.md</exists>
+                </file>
+            </activation>
+            <properties>
+                <bintray.subject>random-maven</bintray.subject>
+                <bintray.mavenRepo>maven</bintray.mavenRepo>
+                <bintray.repo.url>https://dl.bintray.com/${bintray.subject}/${bintray.mavenRepo}</bintray.repo.url>
+            </properties>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>${bintray.subject}</id>
+                    <url>${bintray.repo.url}</url>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+
+        <!-- Bintray deployment. -->
         <profile>
             <id>distro-bintray</id>
             <activation>
@@ -1765,23 +1903,75 @@
                 </file>
             </activation>
             <properties>
-                <!-- organization/user -->
                 <bintray.subject>invalid</bintray.subject>
-                <!-- nested repository name -->
-                <bintray.repository>maven</bintray.repository>
-                <!-- nested package name space -->
-                <bintray.package>${project.artifactId}</bintray.package>
             </properties>
-            <distributionManagement>
-                <repository>
-                    <!-- server identity in settings.xml -->
-                    <id>distro-bintray</id>
-                    <!-- bintray maven api service -->
-                    <url>https://api.bintray.com/maven/${bintray.subject}/${bintray.repository}/${bintray.package}/;publish=1</url>
-                </repository>
-            </distributionManagement>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.carrotgarden.maven</groupId>
+                        <artifactId>bintray-maven-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                            <subject>${bintray.subject}</subject>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>deploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 
+        <!-- Bintray upload. -->
+        <profile>
+            <id>upload-bintray</id>
+            <activation>
+                <file>
+                    <exists>pom-upload-bintray.md</exists>
+                </file>
+            </activation>
+            <properties>
+                <bintray.subject>invalid</bintray.subject>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.carrotgarden.maven</groupId>
+                        <artifactId>bintray-maven-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                            <subject>${bintray.subject}</subject>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>upload</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
         <!-- Maven/Eclipse integration. -->
         <profile>
             <id>m2e-lifecycle-mapping</id>
@@ -1800,6 +1990,19 @@
                             <configuration>
                                 <lifecycleMappingMetadata>
                                     <pluginExecutions>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>org.codehaus.gmaven</groupId>
+                                                <artifactId>groovy-maven-plugin</artifactId>
+                                                <versionRange>[0,)</versionRange>
+                                                <goals>
+                                                    <goal>execute</goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
                                         <pluginExecution>
                                             <pluginExecutionFilter>
                                                 <groupId>org.codehaus.mojo</groupId>
@@ -1895,24 +2098,6 @@
                                             </pluginExecutionFilter>
                                             <action>
                                                 <ignore></ignore>
-                                            </action>
-                                        </pluginExecution>
-                                        <pluginExecution>
-                                            <pluginExecutionFilter>
-                                                <groupId>org.codehaus.mojo</groupId>
-                                                <artifactId>flatten-maven-plugin</artifactId>
-                                                <versionRange>[0,)</versionRange>
-                                                <goals>
-                                                    <goal>flatten</goal>
-                                                </goals>
-                                            </pluginExecutionFilter>
-                                            <action>
-                                                <!-- https://github.com/mojohaus/flatten-maven-plugin/issues/59 -->
-                                                <ignore />
-                                                <!-- <execute> -->
-                                                <!-- <runOnIncremental>false</runOnIncremental> -->
-                                                <!-- <runOnConfiguration>false</runOnConfiguration> -->
-                                                <!-- </execute> -->
                                             </action>
                                         </pluginExecution>
                                         <pluginExecution>
@@ -2322,134 +2507,6 @@
             </build>
         </profile>
 
-        <!-- Remove development entries from pom.xml -->
-        <profile>
-            <id>flatten</id>
-            <activation>
-                <file>
-                    <missing>pom-no-flatten.md</missing>
-                </file>
-            </activation>
-            <properties>
-                <flatten.output.file>${project.pomFile}.flatten</flatten.output.file>
-                <!-- <flatten.output.file>${java.io.tmpdir}/maven-flatten/${project.build.finalName}.xml</flatten.output.file> -->
-            </properties>
-            <build>
-                <plugins>
-                    <!-- Produce clean pom.xml -->
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>flatten-maven-plugin</artifactId>
-                        <configuration>
-                            <indentSize>4</indentSize>
-                            <outputDirectory>/</outputDirectory><!-- file path is absolute -->
-                            <flattenedPomFilename>${flatten.output.file}</flattenedPomFilename>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>flatten</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>flatten</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- Produce resolved dependency pom.xml -->
-        <profile>
-            <id>resolve</id>
-            <activation>
-                <file>
-                    <exists>pom-resolve.md</exists>
-                </file>
-            </activation>
-            <properties>
-                <resolve.groupId>${project.groupId}</resolve.groupId>
-                <resolve.artifactId>${project.artifactId}</resolve.artifactId>
-                <resolve.version>${project.version}</resolve.version>
-                <resolve.list>${java.io.tmpdir}/${project.build.finalName}-resolve.txt</resolve.list>
-                <!-- pomFile is absolute -->
-                <resolve.pom>${project.pomFile}.resolve</resolve.pom>
-            </properties>
-            <build>
-                <plugins>
-                    <!-- Produce dependency list. -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>make-deps-list</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>list</goal>
-                                </goals>
-                                <configuration>
-                                    <includeScope>runtime</includeScope>
-                                    <outputFile>${resolve.list}</outputFile>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- Produce resolved dependency pom.xml -->
-                    <plugin>
-                        <groupId>org.codehaus.gmaven</groupId>
-                        <artifactId>groovy-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>make-deps-pom</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>execute</goal>
-                                </goals>
-                                <configuration>
-                                    <source><![CDATA[
-def pomSource = new File( properties["resolve.list"] )
-def pomTarget = new File( properties["resolve.pom"] )
-def xmlWriter = new StringWriter()
-def pomWriter = new FileWriter(pomTarget)
-def xml = new groovy.xml.MarkupBuilder(xmlWriter)
-xml.project(
-      "xmlns" : "http://maven.apache.org/POM/4.0.0",
-      "xmlns:xsi" : "http://www.w3.org/2001/XMLSchema-instance",
-      "xsi:schemaLocation" : "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd",
-      ) {
-         modelVersion ( "4.0.0" )
-         groupId ( properties["resolve.groupId"] )
-         artifactId ( properties["resolve.artifactId"])
-         version ( properties["resolve.version"] )
-         dependencies {
-            def regex = /.+:.+:.+:.+:.+/
-            pomSource.eachLine { line ->
-               line = line.trim()
-               if( line ==~ regex ) {
-                  def (GroupId,ArtifactId,Type,Version,Scope) = line.split( ':' )
-                  dependency {
-                     groupId ( GroupId )
-                     artifactId ( ArtifactId )
-                     version ( Version )
-                  }
-               }
-            }
-         }
-      }
-def pomText = xmlWriter.toString()
-println pomText
-pomWriter.write(pomText)
-pomWriter.close()
-                           ]]></source>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
         <!-- Skip project install/deploy. -->
         <profile>
             <id>no-repo</id>
@@ -2512,6 +2569,13 @@ pomWriter.close()
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.carrotgarden.maven</groupId>
+                        <artifactId>bintray-maven-plugin</artifactId>
                         <configuration>
                             <skip>true</skip>
                         </configuration>
@@ -2982,10 +3046,10 @@ pomWriter.close()
         </profile>
 
         <profile>
-            <id>typesafe-snapshots</id>
+            <id>repos-typesafe-snapshots</id>
             <activation>
                 <file>
-                    <exists>pom-typesafe-snapshots.md</exists>
+                    <exists>pom-repos-typesafe-snapshots.md</exists>
                 </file>
             </activation>
             <properties>
@@ -3018,10 +3082,10 @@ pomWriter.close()
         </profile>
 
         <profile>
-            <id>typesafe-releases</id>
+            <id>repos-typesafe-releases</id>
             <activation>
                 <file>
-                    <exists>pom-typesafe-releases.md</exists>
+                    <exists>pom-repos-typesafe-releases.md</exists>
                 </file>
             </activation>
             <properties>
@@ -4877,19 +4941,19 @@ pomWriter.close()
                     <url>${repo.sonatype.snapshots.url}</url>
                 </snapshotRepository>
                 <repository>
-                    <id>sonatype-nexus-staging</id>
-                    <name>Sonatype Staging</name>
-                    <url>${repo.sonatype.staging.url}</url>
+                    <id>sonatype-deployment</id>
+                    <name>Sonatype Deployment</name>
+                    <url>${repo.sonatype.deployment.url}</url>
                 </repository>
             </distributionManagement>
         </profile>
 
         <!-- Public CarrotGarden snapshots. -->
         <profile>
-            <id>sonatype-snapshots</id>
+            <id>repos-sonatype-snapshots</id>
             <activation>
                 <file>
-                    <exists>pom-sonatype-snapshots.md</exists>
+                    <exists>pom-repos-sonatype-snapshots.md</exists>
                 </file>
             </activation>
             <repositories>
@@ -4922,10 +4986,10 @@ pomWriter.close()
 
         <!-- Public CarrotGarden releases (before promotion to central). -->
         <profile>
-            <id>sonatype-releases</id>
+            <id>repos-sonatype-releases</id>
             <activation>
                 <file>
-                    <exists>pom-sonatype-releases.md</exists>
+                    <exists>pom-repos-sonatype-releases.md</exists>
                 </file>
             </activation>
             <repositories>

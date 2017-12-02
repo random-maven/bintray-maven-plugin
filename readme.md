@@ -13,16 +13,20 @@ Plugin features
 * create bintray target package on-demand
 * automatic cleanup of old bintray target versions
 * preservation of selected versions from cleanup by regex
+* upload folder content, such as eclipse p2 repository, to fixed path
 
 Maven goals
 * [bintary:deploy](https://random-maven.github.io/bintray-maven-plugin/deploy-mojo.html)
+* [bintary:upload](https://random-maven.github.io/bintray-maven-plugin/upload-mojo.html)
+* read [descriptions in the scala source](https://github.com/random-maven/bintray-maven-plugin/tree/master/src/main/scala/com/carrotgarden/maven/bintray) 
 
-Usage example
+Usage example `bintary:deploy` - deploy maven artifacts
 ```xml
         <profile>
             <id>distro-bintray</id>
             <build>
                 <plugins>
+
                     <!-- Disable default deployer. -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -31,23 +35,84 @@ Usage example
                             <skip>true</skip>
                         </configuration>
                     </plugin>
+
                     <!-- Enable alternative deployer. -->
                     <plugin>
                         <groupId>com.carrotgarden.maven</groupId>
                         <artifactId>bintray-maven-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
+
                             <!-- Bintray oranization name. -->
                             <subject>random-maven</subject>
+
                             <!-- Bintray target repository. -->
-                            <mavenRepo>maven</mavenRepo>
+                            <repository>maven</repository>
+
                             <!-- Bintray credentials in settings.xml. -->
                             <serverId>distro-bintary</serverId>
+
                         </configuration>
                         <executions>
                             <execution>
                                 <goals>
                                     <goal>deploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+```
+
+Usage example `bintary:upload` - upload eclipse p2 repository
+```xml
+        <profile>
+            <id>upload-bintray</id>
+            <build>
+                <plugins>
+
+                    <!-- Disable default deployer. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Enable alternative deployer. -->
+                    <plugin>
+                        <groupId>com.carrotgarden.maven</groupId>
+                        <artifactId>bintray-maven-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+
+                            <!-- Bintray oranization name. -->
+                            <subject>random-eclipse</subject>
+
+                            <!-- Bintray target repository. -->
+                            <repository>eclipse</repository>
+
+                            <!-- Nominal permanent bintray identity. -->
+                            <!-- Actual remote content will mirror local dir. -->
+                            <bintrayPackage>tracker</bintrayPackage>
+                            <bintrayVersion>release</bintrayVersion>
+
+                            <!-- Local folder content to sync to the remote repo. -->
+                            <sourceFolder>${project.build.directory}/repository</sourceFolder>
+                            <!-- Remote folder for local content upload, relative path. -->
+                            <targetFolder>repository</targetFolder>
+
+                            <!-- Bintray credentials in settings.xml. -->
+                            <serverId>distro-bintary</serverId>
+
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>upload</goal>
                                 </goals>
                             </execution>
                         </executions>

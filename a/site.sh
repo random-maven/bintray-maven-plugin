@@ -8,4 +8,4 @@ base=$(git rev-parse --show-toplevel)
 
 cd "$base"
 
-mvn clean plugin:report site
+mvn clean compile plugin:report site -B

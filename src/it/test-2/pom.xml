@@ -24,6 +24,7 @@
                 <version>@project.version@</version>
                 <configuration>
                     <subject>random-maven</subject>
+                    <repository>maven</repository>
                     <performDestroy>true</performDestroy>
                 </configuration>
             </plugin>

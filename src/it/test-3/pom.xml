@@ -1,0 +1,40 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.carrotgarden.a</groupId>
+        <artifactId>carrot-a</artifactId>
+        <version>0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.carrotgarden.maven</groupId>
+    <artifactId>bintray-maven-plugin-test-3</artifactId>
+    <version>${revision}</version>
+    <packaging>jar</packaging>
+
+    <url>http://test-3</url>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.carrotgarden.maven</groupId>
+                <artifactId>bintray-maven-plugin</artifactId>
+                <version>@project.version@</version>
+                <configuration>
+                    <subject>random-maven</subject>
+                    <repository>maven</repository>
+                    <sourceFolder>${project.basedir}/repository</sourceFolder>
+                    <targetFolder>repository</targetFolder>
+                    <bintrayPackage>tracker</bintrayPackage>
+                    <bintrayVersion>release</bintrayVersion>
+                    <!-- <performDestroy>false</performDestroy> -->
+                    <!-- <performEnsure>true</performEnsure> -->
+                    <!-- <performUpload>true</performUpload> -->
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
