@@ -12,7 +12,6 @@
     <groupId>com.carrotgarden.maven</groupId>
     <artifactId>bintray-maven-plugin-test-1</artifactId>
     <version>${revision}</version>
-    <packaging>jar</packaging>
 
     <url>http://test-1</url>
 

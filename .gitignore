@@ -1,12 +1,12 @@
 
-# eclipse
-
 .project
-.classpath
 .settings/
+.classpath
 
-# maven
-
+bin/
 target/
-*.flatten
+.cache*
 
+/pom.xml.flatten
+
+test-repo/

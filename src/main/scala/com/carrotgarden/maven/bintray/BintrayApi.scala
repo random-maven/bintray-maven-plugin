@@ -17,33 +17,38 @@ import okhttp3.MultipartBody
 import java.io.File
 import java.util.concurrent.TimeUnit
 
+import scala.collection.JavaConverters._
+
+import com.carrotgarden.maven.tools.Description
+import java.io.IOException
+
 /**
  * Bintray rest api. Entry point to the bintray resource management.
  */
 trait BintrayApi { self : BaseParams with AbstractMojo =>
 
-  /**
-   * Bintray rest api url.
-   */
+  @Description( """
+  Bintray rest api url.
+  """ )
   @Parameter( property     = "bintray.restApiUrl", defaultValue = "https://bintray.com/api/v1" )
   var restApiUrl : String = _
 
-  /**
-   * REST api connection timeout, seconds.
-   */
-  @Parameter( property     = "bintray.restConnectTimeout", defaultValue = "10" )
+  @Description( """
+  REST api connection timeout, seconds.
+  """ )
+  @Parameter( property     = "bintray.restConnectTimeout", defaultValue = "30" )
   var restConnectTimeout : Int = _
 
-  /**
-   * REST api read operation timeout, seconds.
-   */
-  @Parameter( property     = "bintray.restReadTimeout", defaultValue = "10" )
+  @Description( """
+  REST api read operation timeout, seconds.
+  """ )
+  @Parameter( property     = "bintray.restReadTimeout", defaultValue = "30" )
   var restReadTimeout : Int = _
 
-  /**
-   * REST api write operation timeout, seconds.
-   */
-  @Parameter( property     = "bintray.restWriteTimeout", defaultValue = "10" )
+  @Description( """
+  REST api write operation timeout, seconds.
+  """ )
+  @Parameter( property     = "bintray.restWriteTimeout", defaultValue = "30" )
   var restWriteTimeout : Int = _
 
   /**
@@ -57,16 +62,15 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    * Provide bintray rest api authentication from
    * {@code username}/{@code password} with fallback to the {@link #serverId}.
    */
-  lazy val authenticator = new Authenticator() {
-    @Override
-    def authenticate( route : Route, response : Response ) = {
+  lazy val basicAuthenticator = new Authenticator() {
+    override def authenticate( route : Route, response : Response ) = {
       var username = BintrayApi.this.username;
       var password = BintrayApi.this.password;
       if ( username == null || password == null ) {
-        val server = settings.getServer( serverId );
+        val server = settings.getServer( serverId )
         if ( server != null ) {
-          username = server.getUsername();
-          password = server.getPassword();
+          username = server.getUsername()
+          password = server.getPassword()
         }
       }
       val credentials = Credentials.basic( username, password );
@@ -75,17 +79,78 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
   };
 
   /**
+   * Provide bintray proxy authentication from {@link #serverId}.
+   * https://maven.apache.org/guides/mini/guide-proxies.html
+   */
+  lazy val proxyOption = settings.getProxies.asScala.find( _.getId == serverId )
+
+  /**
+   * Provide bintray proxy authentication from {@link #serverId}.
+   * https://maven.apache.org/guides/mini/guide-proxies.html
+   */
+  lazy val proxyAuthenticator = {
+    proxyOption.map { proxy =>
+      val credential = Credentials.basic( proxy.getUsername, proxy.getPassword )
+      new Authenticator() {
+        override def authenticate( route : Route, response : Response ) : Request = {
+          response.request().newBuilder().header( "Proxy-Authorization", credential ).build()
+        }
+      }
+    }.getOrElse( Authenticator.NONE )
+  }
+
+  /**
+   * Provide bintray proxy authentication from {@link #serverId}.
+   * https://maven.apache.org/guides/mini/guide-proxies.html
+   */
+  lazy val proxySelector : java.net.ProxySelector = {
+    import java.net._
+    import java.util._
+    proxyOption.map { proxy =>
+      val proxyType = proxy.getProtocol match {
+        case "http"   => Proxy.Type.HTTP
+        case "socks"  => Proxy.Type.SOCKS
+        case "direct" => Proxy.Type.DIRECT
+        case _        => throw new RuntimeException( s"Wrong proxy protocol: ${proxy.getProtocol}." )
+      }
+      val proxyAddress = new InetSocketAddress( proxy.getHost, proxy.getPort )
+      val proxyInstance = new Proxy( proxyType, proxyAddress )
+      val nonProxyHostList = proxy.getNonProxyHosts.split( "\\|" ).toList
+      def hasNonProxyHost( host : String ) : Boolean = {
+        nonProxyHostList.find( test => test.endsWith( host ) ).isDefined
+      }
+      new ProxySelector() {
+        override def select( uri : URI ) : List[ Proxy ] = {
+          val protocol = uri.getScheme
+          val host = uri.getHost
+          val port = uri.getPort
+          if ( hasNonProxyHost( host ) ) {
+            Collections.singletonList( Proxy.NO_PROXY )
+          } else {
+            Collections.singletonList( proxyInstance )
+          }
+        }
+        override def connectFailed( uri : URI, sa : SocketAddress, ioe : IOException ) : Unit = {
+          throw new RuntimeException( s"Proxy failure: ${uri} ${sa}", ioe )
+        }
+      }
+    }.getOrElse( ProxySelector.getDefault )
+  }
+
+  /**
    * Bintray rest api client.
    */
   lazy val client = {
     new OkHttpClient.Builder()
-      .authenticator( authenticator )
+      .authenticator( basicAuthenticator )
+      .proxyAuthenticator( proxyAuthenticator )
+      .proxySelector( proxySelector )
       .connectTimeout( restConnectTimeout, TimeUnit.SECONDS )
       .readTimeout( restReadTimeout, TimeUnit.SECONDS )
       .writeTimeout( restWriteTimeout, TimeUnit.SECONDS )
       .followRedirects( true )
       .followSslRedirects( true )
-      .build();
+      .build()
   }
 
   /**
@@ -112,8 +177,7 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    */
   def urlContentPublish() = {
     // POST /content/:subject/:repo/:package/:version/publish
-    val version = project.getVersion();
-    restApiUrl + "/content/" + subject + "/" + repository + "/" + bintrayPackage + "/" + version + "/publish";
+    restApiUrl + "/content/" + subject + "/" + repository + "/" + bintrayPackage + "/" + bintrayVersion + "/publish";
   }
 
   /**
@@ -358,7 +422,7 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
     val request = new Request.Builder().url( url ).delete().build();
     val response = client.newCall( request ).execute();
     if ( response.code() != 200 ) {
-      getLog().error( render( "Version delete error", response ) );
+      getLog().error( render( "Version create error", response ) );
       throw new RuntimeException();
     }
   }

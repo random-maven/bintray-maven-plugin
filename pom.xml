@@ -7,7 +7,7 @@
         <groupId>com.carrotgarden.a</groupId>
         <artifactId>carrot-a</artifactId>
         <version>0-SNAPSHOT</version>
-        <relativePath>a</relativePath>
+        <relativePath>.mvn</relativePath>
     </parent>
 
     <groupId>com.carrotgarden.maven</groupId>
@@ -15,7 +15,12 @@
     <version>${revision}</version>
     <packaging>maven-plugin</packaging>
 
-    <url>https://github.com/random-maven/bintray-maven-plugin</url>
+    <name>Bintray Maven Plugin</name>
+    
+    <description>
+      Deploy Maven project artifacts to existing Bintray Maven repository.
+      Upload Eclipse P2 repository artifacts to existing Bintray Eclipse repository.
+    </description>
 
     <licenses>
         <license>
@@ -23,30 +28,32 @@
         </license>
     </licenses>
 
-    <name>Bintray Maven Plugin</name>
-    <description>
-      Deploy maven project artifacts to existing bintray maven repository.
-      Upload eclipse p2 repository artifacts to existing bintray eclipse repository.
-    </description>
+    <url>https://github.com/random-maven/bintray-maven-plugin</url>
+    <scm>
+        <url>https://github.com/random-maven/bintray-maven-plugin</url>
+        <connection>scm:git:git@github.com:random-maven/bintray-maven-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:random-maven/bintray-maven-plugin.git</developerConnection>
+    </scm>
 
-    <repositories>
-        <repository>
-            <id>random-maven</id>
-            <url>https://dl.bintray.com/random-maven/maven/</url>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>random-maven</id>
-            <url>https://dl.bintray.com/random-maven/maven/</url>
-        </pluginRepository>
-    </pluginRepositories>
+    <!-- Maven epoch. -->
+    <prerequisites>
+        <maven>3.0</maven>
+    </prerequisites>
 
     <properties>
-        <release.epoch>1.1</release.epoch>
-        <version.maven>3.5.0</version.maven>
+        <release.epoch>1.2</release.epoch>
+        <version.maven>[3.5,3.6)</version.maven>
         <bintray.subject>random-maven</bintray.subject>
+        <bintray.repository>maven</bintray.repository>
     </properties>
+
+    <!-- Documentation site folder. -->
+    <distributionManagement>
+        <site>
+            <id>github-docs</id>
+            <url>file://${project.basedir}/docs/</url>
+        </site>
+    </distributionManagement>
 
     <dependencies>
 
@@ -71,7 +78,7 @@
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
-            <version>3.5</version>
+            <version>${version.maven}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -104,24 +111,12 @@
             <artifactId>scala-library</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.scalameta</groupId>
-            <artifactId>scalameta_${version.scala.gen}</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalameta</groupId>
-            <artifactId>contrib_${version.scala.gen}</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
-
 
     <build>
         <plugins>
 
-            <!-- Generate plugin.xml descriptor. -->
+            <!-- Generate plugin.xml descriptor. See plug-anno profile. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
@@ -130,7 +125,6 @@
                 </configuration>
             </plugin>
 
-
             <!-- Invoke integration tests. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -138,6 +132,7 @@
                 <configuration>
                     <showErrors>true</showErrors>
                     <streamLogs>true</streamLogs>
+                    <localRepositoryPath>${project.basedir}/test-repo</localRepositoryPath>
                     <goals>
                         <goal>clean</goal>
                         <goal>deploy</goal>
@@ -145,35 +140,29 @@
                 </configuration>
             </plugin>
 
-            <!-- Generate documentation site. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-            </plugin>
-
-            <!-- Deploy documentation site to github. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>make-dir</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <copy todir="${basedir}/docs/">
-                                    <fileset dir="${basedir}/target/site/" />
-                                </copy>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <!-- Default index. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>index</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <!-- Plugin executions. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
 
 </project>

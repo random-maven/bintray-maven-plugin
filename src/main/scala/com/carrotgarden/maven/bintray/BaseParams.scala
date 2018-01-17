@@ -5,116 +5,158 @@ import org.apache.maven.project.MavenProject
 import org.apache.maven.settings.Settings
 import org.apache.maven.plugins.annotations._
 
+import com.carrotgarden.maven.tools.Description
+
 /**
  * Shared mojo execution configuration parameters.
  */
 trait BaseParams {
 
-  /**
-   * Maven project providing deployment artifacts.
-   */
+  @Description( """
+  Maven project providing deployment artifacts.
+  """ )
   @Parameter( defaultValue = "${project}", required = true, readonly = true )
   var project : MavenProject = _
 
-  /**
-   * Maven session during execution.
-   */
+  @Description( """
+  Maven session during execution.
+  """ )
   @Parameter( defaultValue = "${session}", required = true, readonly = true )
   var session : MavenSession = _
 
-  /**
-   * Expose server credentials from settings.xml.
-   */
+  @Description( """
+  Expose server credentials 
+  from <a href="https://maven.apache.org/settings.html">settings.xml</a>.
+  """ )
   @Parameter( defaultValue = "${settings}", required = true, readonly = true )
   var settings : Settings = _
 
-  /**
-   * Bintray rest-api-user for authentication. When missing, uses
-   * {@link #serverId}: {server/username} from settings.xml.
-   */
+  @Description( """
+  Bintray rest-api-actor for authentication. 
+  When missing, uses 
+  <a href="#serverId"><b>serverId</b></a> / <code>username</code>
+  from <a href="https://maven.apache.org/settings.html">settings.xml</a>.
+<pre>
+&lt;server&gt;
+  &lt;id&gt;distro-bintray&lt;/id&gt;
+  &lt;username&gt;...&lt;/username&gt;
+  &lt;password&gt;...&lt;/password&gt;
+&lt;/server&gt;
+</pre> 
+  """ )
   @Parameter( property = "bintray.username" )
   var username : String = _
 
-  /**
-   * Bintray rest-api-token for authentication. When missing, uses
-   * {@link #serverId}: {server/password} from settings.xml.
-   */
+  @Description( """
+  Bintray rest-api-token for authentication. 
+  When missing, uses 
+  <a href="#serverId"><b>serverId</b></a> / <code>password</code>
+  from <a href="https://maven.apache.org/settings.html">settings.xml</a>.
+<pre>
+&lt;server&gt;
+  &lt;id&gt;distro-bintray&lt;/id&gt;
+  &lt;username&gt;...&lt;/username&gt;
+  &lt;password&gt;...&lt;/password&gt;
+&lt;/server&gt;
+</pre> 
+  """ )
   @Parameter( property = "bintray.password" )
   var password : String = _
 
-  /**
-   * Server id for credentials lookup via {@link serverId}: { server/username,
-   * server/password } in maven settings.xml.
-   */
+  @Description( """
+  Server id for credentials lookup: <code>username</code>, <code>password</code>  
+  from <a href="https://maven.apache.org/settings.html">settings.xml</a>.
+  Used when not provided via parameters:
+  <a href="#username"><b>username</b></a>,
+  <a href="#password"><b>password</b></a>.
+<pre>
+&lt;server&gt;
+  &lt;id&gt;distro-bintray&lt;/id&gt;
+  &lt;username&gt;...&lt;/username&gt;
+  &lt;password&gt;...&lt;/password&gt;
+&lt;/server&gt;
+</pre>
+  Configure this <code>serverId</code> as <code>proxy/id</code> for optional
+  <a href="https://maven.apache.org/guides/mini/guide-proxies.html">proxy setup</a>. 
+  Note: bintray credentials and proxy credentials are unrelated.
+<pre>
+&lt;proxy&gt;
+  &lt;id&gt;distro-bintray&lt;/id&gt;
+  &lt;username&gt;...&lt;/username&gt;
+  &lt;password&gt;...&lt;/password&gt;
+&lt;/proxy&gt;
+</pre> 
+  """ )
   @Parameter( property     = "bintray.serverId", defaultValue = "distro-bintray" )
   var serverId : String = _
 
-  //     * Package can be optionally created on demand before deployment via {@link #performEnsure}.
-
-  /**
-   * Bintray target repository package. Corresponds to X-Bintray-Package
-   */
+  @Description( """
+  Bintray target repository package. Corresponds to <code>X-Bintray-Package</code> rest header.
+  """ )
   @Parameter( property     = "bintray.bintrayPackage", defaultValue = "${project.artifactId}" )
   var bintrayPackage : String = _
 
-  /**
-   * Bintray target repository version. Corresponds to X-Bintray-Version
-   */
+  @Description( """
+  Bintray target repository version. Corresponds to <code>X-Bintray-Version</code> rest header.
+  """ )
   @Parameter( property     = "bintray.bintrayVersion", defaultValue = "${project.version}" )
   var bintrayVersion : String = _
 
-  /**
-   * Bintray package create definition parameter: version control system url.
-   */
+  @Description( """
+  Bintray package create definition parameter: 
+  version control system url (rest parameter: <code>vcs_url</code>).
+  """ )
   @Parameter( property     = "bintray.packageVcsUrl", defaultValue = "${project.url}" )
   var packageVcsUrl : String = _
 
-  /**
-   * Bintray package create definition parameter: licenses list to attach to the
-   * target package.
-   */
+  @Description( """
+  Bintray package create definition parameter: 
+  licenses list to attach to the target package (rest parameter: <code>licenses</code>).
+  """ )
   @Parameter( property     = "bintray.packageLicenses", defaultValue = "Apache-2.0" )
   var packageLicenses : Array[ String ] = _
 
-  /**
-   * Bintray user or organization name which contains target maven repository
-   * {@link #repository}.
-   */
+  @Description( """
+  Bintray user or organization name which contains target
+  <a href="#repository"><b>repository</b></a>.
+  """ )
   @Parameter( property     = "bintray.subject", defaultValue = "${user.name}" )
   var subject : String = _
 
-  /**
-   * Bintray target repository name. Repository must already exist for the
-   * bintray {@link #subject}.
-   */
+  @Description( """
+  Bintray target repository name. 
+  Repository must already exist for the bintray <a href="#subject"><b>subject</b></a>.
+  """ )
   @Parameter( property     = "bintray.repository", defaultValue = "repo" )
   var repository : String = _
 
-  /**
-   * Deploy behaviour: during deployment cleanup, preserve versions with the
-   * version description matching given java regular expression.
-   */
+  @Description( """
+  Deploy behaviour: during deployment cleanup, 
+  preserve versions with version description matching given Java regular expression.
+  """ )
   @Parameter( property     = "bintray.preserveRegex", defaultValue = "(PRESERVE)" )
   var preserveRegex : String = _
 
-  /**
-   * Optionally skip all steps of the deployment execution.
-   */
+  @Description( """
+  Flat go skip all steps of the deployment execution.
+  """ )
   @Parameter( property     = "bintray.skip", defaultValue = "false" )
   var skip : Boolean = _
 
-  /**
-   * Execution step 1: optionally remove target bintray package with all versions and
-   * files.
-   */
+  @Description( """
+  Execution step 1: optionally remove target bintray package 
+  with all versions and files.
+  """ )
   @Parameter( property     = "bintray.performDestroy", defaultValue = "false" )
   var performDestroy : Boolean = _
 
-  /**
-   * Execution step 2: optionally create target bintray package before deployment.
-   * Use create parameters: {@link #packageName}, {@link #packageVcsUrl},
-   * {@link #packageLicenses}
-   */
+  @Description( """
+  Execution step 2: optionally create target bintray package before deployment.
+  Use create parameters: 
+  <a href="#packageName"><b>packageName</b></a>,
+  <a href="#packageVcsUrl"><b>packageVcsUrl</b></a>,
+  <a href="#packageLicenses"><b>packageLicenses</b></a>.
+  """ )
   @Parameter( property     = "bintray.performEnsure", defaultValue = "true" )
   var performEnsure : Boolean = _
 

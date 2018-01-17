@@ -1,0 +1,26 @@
+language: java
+dist: trusty
+jdk:
+- oraclejdk8
+cache:
+  directories:
+  # maven repository
+  - "$HOME/.m2"
+  # integration test
+  - "./test-repo" 
+env:
+  global:
+  # bintray repository
+  - secure: JfWvBTJ2esJn6weIg0z0OSymBHAPGUgYpF69EdpNwxrd1Fq2ppDeiKA0/73QlIvy2vvO73fhd+rsQ5+6nhaAt6h3oJLtGLrLlcEZk/oGDkqqUjslftsqaTlPR30dw/YCygyun+VQPIal1aiXMX4dGtbKC9ivv4U/RQ2kHR8xVAnn+Xsh2me6QpVPzdtJI/teUVte26ThJlAg/763Hl2XWK00DMbVcE9fr0SFUjtWi+2S+6M8QoN3ZNH//DFSZojDJz1eEdYvTHcBW/gSgal5YDAhpFw+gDxSrEZJ+Qw2eF3mESof71MWe2HffKpqbTWAen18q9qjki1N3ql5wn7urfJl1wFvVmmuu2pTJ82i+Rp12uOfrLuA2sLyxa7SZO0hWWpjGPiHhzvYNm3LPWSJvQkxcOdA47dz6lteBUzZcyneEnyjgYJpVbpD+E0E9dbIpp3haE5AJlbG0Et6FQ1DL8PFCgfgxnvhDZq83sTBcdplqoC7h/g3EHZ10wpkBF0XfsJTj5pQyQwFzGrSdHCfBshYRBgX8fuOETR+ObKQi7TEEiG63qxIl5+YWR4IH1bfWPDFpPuNh1x9ULF3WUFEyGb7lB5HQoC5ZwsJtv3qAWZ0TEDJXhB6hPka9l1r3xUn80wuG9Ehe/uZhMUritAbbkYsJ2seLS4gM+tLSWlh7GY=
+  - secure: UwgFOQi6mR1+McxisuCKwT399mt1R0RCzb1HGqdGwaVie6inemobGamrfX5mdNQwM0bmji5mV+SBqc5W8GolYsfMewW8MTxO1borkjWLWyUGLMcIb0nDu3wybD8ECOCV7oiLl6wSjoPIYD1EftPkymqTzebIXreQ9YgDEtTt6xcD/D4aNC1wLbZeSQroMBvdG/Qgkf8349je4eXrxYqW/oZybHBiKjHwFyev1m1mek3C2dKBQeHg6D7K1fIugT4QHv9FfaX4qnaPyzHASZU2Y15+v+p378rM/MbA/A8XcB3BkdC26x31gEfCkqHQTfC0dMbfeeWjmbaHCKOnd6Q+hWePhGmlG/uKrOz8ii5GRP/EucLWAV2v6oOsF0LrZiv9Jd3EvKuTA6xBZG9749aJO5Ye9CejbUvB2UiYertIb9+BmeCPuM0gcmTdljnwExJJ6WSr6BedPudSDZRAbHBYvWXtPR0GAqMDfRBw1puvjz7mSdDQRVrKukMB3MYNIpsi5K6377Wx/kzKYjRpK0wkjYiuQsPI6GRMMLzjzdV1ONT7J2N7GoTcV5WJ9ogjPRWnL+bB2vmLNghq9/ZfhP+7Vf3DpCWcZ97ivJKmMfWJh4MlI2FiQ9w3Fd2zIPe0X6m/PerldruUSQfM5nThG0p78IRyjExupf37afSJAsayAHI=
+install:
+- "/bin/true"
+script:
+# bintray repository
+- "cp -f ./.mvn/ci/settings.xml $HOME/.m2/settings.xml"
+# scala tool chain
+- "cp -f ./.mvn/ci/toolchains.xml $HOME/.m2/toolchains.xml"
+# integration test
+- "./.mvn/verify.sh || exit 1"
+# streaming release
+- "./.mvn/release-bintray.sh || exit 1"

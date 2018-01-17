@@ -12,78 +12,78 @@ import org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout
 import org.apache.maven.plugin.deploy.AbstractDeployMojo
 import org.apache.maven.plugins.annotations._
 
-/**
- * <p>
- * Deploy maven project artifacts to existing bintray maven repository.
- * <p>
- * Goal operates via bintray rest api:
- * <a href="https://bintray.com/docs/api/">https://bintray.com/docs/api/</a>.
- * <p>
- * Optional features:
- * <ul>
- * <li>create bintray repository package on-demand
- * <li>remove previous versions from bintray package
- * </ul>
- */
-@Mojo( name            = "deploy", defaultPhase = LifecyclePhase.DEPLOY, requiresProject = true )
+import com.carrotgarden.maven.tools.Description
+
+@Description( """
+Deploy Maven build project artifacts to existing Bintray Maven repository.
+Goal operates via <a href="https://bintray.com/docs/api/">Bintray rest api</a>.
+""" )
+@Mojo(
+  name            = "deploy",
+  defaultPhase    = LifecyclePhase.DEPLOY,
+  requiresProject = true
+)
 class DeployMojo extends AbstractDeployMojo
   with BuildApi
   with BintrayApi
   with BaseParams
   with BaseExecute {
 
-  /**
-   * Execution step 3: actually do invoke artifact deployment to the target
-   * repository.
-   */
+  @Description( """
+  Execution step 3: actually do invoke artifact deployment
+  to the target repository.
+  """ )
   @Parameter( property     = "bintray.performDeploy", defaultValue = "true" )
   var performDeploy : Boolean = _
 
-  /**
-   * Execution step 4: optionally mark deployment artifact as "published for bintray
-   * consumption" after the deployment.
-   */
+  @Description( """
+  Execution step 4: optionally mark deployment artifact 
+  as "published for bintray consumption" after the deployment.
+  """ )
   @Parameter( property     = "bintray.performPublish", defaultValue = "true" )
   var performPublish : Boolean = _
 
-  /**
-   * Execution step 5: optionally remove previous versions with files from target
-   * bintray package after the deployment. Preserve select versions via
-   * {@link #preserveRegex}.
-   */
+  @Description( """
+  Execution step 5: optionally remove previous versions with files 
+  from target bintray package after the deployment. 
+  Preserve select versions via 
+  <a href="#preserveRegex"><b>preserveRegex</b></a>.
+  """ )
   @Parameter( property     = "bintray.performCleanup", defaultValue = "true" )
   var performCleanup : Boolean = _
 
-  /**
-   * Location of deployment artifact.
-   */
+  @Description( """
+  Identity of build deployment artifact.
+  """ )
   @Parameter( property = "project.build.finalName", required = false, readonly = true )
   var finalName : String = _
 
-  /**
-   * Location of deployment artifact.
-   */
+  @Description( """
+  Location of build deployment artifact.
+  """ )
   @Parameter( property = "project.build.directory", required = false, readonly = true )
   var buildDirectory : String = _
 
-  /**
-   * Parameter used to control how many times a failed deployment will be retried
-   * before giving up and failing. If a value outside the range 1-10 is specified
-   * it will be pulled to the nearest value within the range 1-10.
-   */
+  @Description( """
+  Parameter used to control how many times a failed deployment will be retried
+  before giving up and failing. If a value outside the range 1-10 is specified
+  it will be pulled to the nearest value within the range 1-10.
+  """ )
   @Parameter( property     = "retryFailedDeploymentCount", defaultValue = "1" )
   var retryFailedDeploymentCount : Int = _
 
-  /**
-   * Repository materialization factory.
-   */
+  @Description( """
+  Repository materialization factory.
+  """ )
+  // Note field name different from super.
   @Component
   var repositoryFactoryX : ArtifactRepositoryFactory = _
 
-  /**
-   * Repository layout definitions.
-   */
+  @Description( """
+  Repository layout definitions.
+  """ )
   @Component( role = classOf[ ArtifactRepositoryLayout ] )
+  // Note field name different from super.
   var repositoryLayoutsX : Map[ String, ArtifactRepositoryLayout ] = _
 
   /**

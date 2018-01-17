@@ -4,11 +4,15 @@ import org.sonatype.plexus.build.incremental.BuildContext;
 
 import org.apache.maven.plugins.annotations.Component;
 
-trait BuildApi { self : BaseParams =>
+import com.carrotgarden.maven.tools.Description
 
-  /**
-   * IDE build integration context.
-   */
+trait BuildApi {
+
+  self : BaseParams =>
+
+  @Description( """
+  Eclipse build integration context.
+  """ )
   @Component()
   var buildContext : BuildContext = _
 

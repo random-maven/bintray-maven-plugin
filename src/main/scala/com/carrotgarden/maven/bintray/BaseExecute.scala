@@ -6,7 +6,9 @@ import org.apache.maven.plugin.MojoFailureException
 /**
  * Shared mojo execution process steps.
  */
-trait BaseExecute { self : BaseParams with BuildApi with AbstractMojo =>
+trait BaseExecute {
+
+  self : BaseParams with BuildApi with AbstractMojo =>
 
   /**
    * Actually perform goal execution.

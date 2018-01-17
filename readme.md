@@ -1,14 +1,16 @@
 
-### bintray-maven-plugin
+### Bintray maven plugin
 
 [![Apache License, Version 2.0, January 2004](https://img.shields.io/github/license/mojohaus/versions-maven-plugin.svg?label=License)](http://www.apache.org/licenses/)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.carrotgarden.maven/bintray-maven-plugin/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.carrotgarden.maven/bintray-maven-plugin)
 [![Bintray Download](https://api.bintray.com/packages/random-maven/maven/bintray-maven-plugin/images/download.svg) ](https://bintray.com/random-maven/maven/bintray-maven-plugin/_latestVersion)
+[![Travis Status](https://travis-ci.org/random-maven/bintray-maven-plugin.svg?branch=master)](https://travis-ci.org/random-maven/bintray-maven-plugin/builds)
 
 Similar plugins
 * [devexperts/bintray-maven-plugin](https://github.com/Devexperts/bintray-maven-plugin)
 
 Plugin features
+* proxy authentication
 * bintray target package removal
 * create bintray target package on-demand
 * automatic cleanup of old bintray target versions
@@ -18,9 +20,15 @@ Plugin features
 Maven goals
 * [bintary:deploy](https://random-maven.github.io/bintray-maven-plugin/deploy-mojo.html)
 * [bintary:upload](https://random-maven.github.io/bintray-maven-plugin/upload-mojo.html)
-* read [descriptions in the scala source](https://github.com/random-maven/bintray-maven-plugin/tree/master/src/main/scala/com/carrotgarden/maven/bintray) 
 
-Usage example `bintary:deploy` - deploy maven artifacts
+### Usage examples
+
+#### `bintary:deploy` - deploy maven artifacts:
+
+```
+mvn clean deploy -P distro-bintray
+```
+
 ```xml
         <profile>
             <id>distro-bintray</id>
@@ -54,6 +62,7 @@ Usage example `bintary:deploy` - deploy maven artifacts
 
                         </configuration>
                         <executions>
+                            <!-- Activate "bintary:deploy" during "deploy" -->
                             <execution>
                                 <goals>
                                     <goal>deploy</goal>
@@ -66,7 +75,12 @@ Usage example `bintary:deploy` - deploy maven artifacts
         </profile>
 ```
 
-Usage example `bintary:upload` - upload eclipse p2 repository
+#### `bintary:upload` - upload eclipse p2 repository
+
+```
+mvn clean deploy -P upload-bintray
+```
+
 ```xml
         <profile>
             <id>upload-bintray</id>
@@ -110,6 +124,7 @@ Usage example `bintary:upload` - upload eclipse p2 repository
 
                         </configuration>
                         <executions>
+                            <!-- Activate "bintary:upload" during "deploy" -->
                             <execution>
                                 <goals>
                                     <goal>upload</goal>
@@ -120,4 +135,13 @@ Usage example `bintary:upload` - upload eclipse p2 repository
                 </plugins>
             </build>
         </profile>
+```
+
+### Build yourself
+
+```
+cd /tmp
+git clone git@github.com:random-maven/bintray-maven-plugin.git
+cd bintray-maven-plugin
+./mvnw.sh clean install -B -P skip-test
 ```
