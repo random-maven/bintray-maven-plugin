@@ -31,4 +31,6 @@ trait BaseExecute {
     }
   }
 
+  def hasEmptyString( text : String ) = text == null || text.isEmpty
+
 }

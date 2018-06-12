@@ -1,10 +1,18 @@
 
-### Bintray maven plugin
+### Bintray Maven Plugin
 
-[![Apache License, Version 2.0, January 2004](https://img.shields.io/github/license/mojohaus/versions-maven-plugin.svg?label=License)](http://www.apache.org/licenses/)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.carrotgarden.maven/bintray-maven-plugin/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.carrotgarden.maven/bintray-maven-plugin)
-[![Bintray Download](https://api.bintray.com/packages/random-maven/maven/bintray-maven-plugin/images/download.svg) ](https://bintray.com/random-maven/maven/bintray-maven-plugin/_latestVersion)
-[![Travis Status](https://travis-ci.org/random-maven/bintray-maven-plugin.svg?branch=master)](https://travis-ci.org/random-maven/bintray-maven-plugin/builds)
+A Bintray plugin to deploy Maven artifacts and upload Eclipse repositories. 
+
+[![Project License][licence_icon]][licence_link]
+[![Travis Status][travis_icon]][travis_link]
+[![Appvey Status][appvey_icon]][appvey_link]
+[![Project Files][tokei_files_icon]][tokei_basic_link]
+[![Project Lines][tokei_lines_icon]][tokei_basic_link]
+[![Lines of Code][tokei_basic_icon]][tokei_basic_link]
+
+|         | Production Release | Development Release |
+|---------|--------------------|---------------------|
+| <h5>Install</h5> | [![Central][central_icon]][central_link] | [![Bintray][bintray_icon]][bintray_link] | 
 
 Similar plugins
 * [devexperts/bintray-maven-plugin](https://github.com/Devexperts/bintray-maven-plugin)
@@ -16,6 +24,7 @@ Plugin features
 * automatic cleanup of old bintray target versions
 * preservation of selected versions from cleanup by regex
 * upload folder content, such as eclipse p2 repository, to fixed path
+* automatic cleanup of previous eclipse p2 repository resources by regex
 
 Maven goals
 * [bintary:deploy](https://random-maven.github.io/bintray-maven-plugin/deploy-mojo.html)
@@ -139,9 +148,29 @@ mvn clean deploy -P upload-bintray
 
 ### Build yourself
 
-```
+```bash
 cd /tmp
 git clone git@github.com:random-maven/bintray-maven-plugin.git
 cd bintray-maven-plugin
 ./mvnw.sh clean install -B -P skip-test
 ```
+
+[licence_icon]: https://img.shields.io/github/license/random-maven/bintray-maven-plugin.svg?label=License
+[licence_link]: http://www.apache.org/licenses/
+
+[travis_icon]: https://travis-ci.org/random-maven/bintray-maven-plugin.svg
+[travis_link]: https://travis-ci.org/random-maven/bintray-maven-plugin/builds
+
+[appvey_icon]: https://ci.appveyor.com/api/projects/status/5ena8xeyujneqqog?svg=true
+[appvey_link]: https://ci.appveyor.com/project/random-maven/bintray-maven-plugin/history 
+
+[tokei_files_icon]: https://tokei.rs/b1/github/random-maven/bintray-maven-plugin?category=files 
+[tokei_lines_icon]: https://tokei.rs/b1/github/random-maven/bintray-maven-plugin?category=lines 
+[tokei_basic_icon]: https://tokei.rs/b1/github/random-maven/bintray-maven-plugin
+[tokei_basic_link]: https://github.com/random-maven/bintray-maven-plugin 
+
+[central_icon]: https://maven-badges.herokuapp.com/maven-central/com.carrotgarden.maven/bintray-maven-plugin/badge.svg?style=plastic
+[central_link]: https://maven-badges.herokuapp.com/maven-central/com.carrotgarden.maven/bintray-maven-plugin
+
+[bintray_icon]: https://api.bintray.com/packages/random-maven/maven/bintray-maven-plugin/images/download.svg
+[bintray_link]: https://bintray.com/random-maven/maven/bintray-maven-plugin/_latestVersion

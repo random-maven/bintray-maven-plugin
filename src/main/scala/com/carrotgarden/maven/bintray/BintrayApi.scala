@@ -21,14 +21,17 @@ import scala.collection.JavaConverters._
 
 import com.carrotgarden.maven.tools.Description
 import java.io.IOException
+import org.json.JSONArray
 
 /**
- * Bintray rest api. Entry point to the bintray resource management.
+ * Bintray REST API. Entry point to the bintray resource management.
  */
-trait BintrayApi { self : BaseParams with AbstractMojo =>
+trait BintrayApi {
+
+  self : BaseParams with AbstractMojo =>
 
   @Description( """
-  Bintray rest api url.
+  Bintray REST API URL.
   """ )
   @Parameter( property     = "bintray.restApiUrl", defaultValue = "https://bintray.com/api/v1" )
   var restApiUrl : String = _
@@ -51,15 +54,21 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
   @Parameter( property     = "bintray.restWriteTimeout", defaultValue = "30" )
   var restWriteTimeout : Int = _
 
+  @Description( """
+  Bintray public download URL.
+  """ )
+  @Parameter( property     = "bintray.downloadUrl", defaultValue = "https://dl.bintray.com" )
+  var downloadUrl : String = _
+
   /**
-   * Bintray rest api data format.
+   * Bintray REST API data format.
    */
   lazy val TEXT = MediaType.parse( "text/plain" )
-  lazy val JSON = MediaType.parse( "application/json; charset=utf-8" );
+  lazy val JSON = MediaType.parse( "application/json; charset=utf-8" )
   lazy val BINARY = MediaType.parse( "application/octet-stream" )
 
   /**
-   * Provide bintray rest api authentication from
+   * Provide bintray REST API authentication from
    * {@code username}/{@code password} with fallback to the {@link #serverId}.
    */
   lazy val basicAuthenticator = new Authenticator() {
@@ -73,8 +82,8 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
           password = server.getPassword()
         }
       }
-      val credentials = Credentials.basic( username, password );
-      response.request().newBuilder().header( "Authorization", credentials ).build();
+      val credentials = Credentials.basic( username, password )
+      response.request().newBuilder().header( "Authorization", credentials ).build()
     }
   };
 
@@ -138,7 +147,7 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
   }
 
   /**
-   * Bintray rest api client.
+   * Bintray REST API client.
    */
   lazy val client = {
     new OkHttpClient.Builder()
@@ -155,12 +164,28 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
 
   /**
    * Maven upload url
-   * <p>
    * https://bintray.com/docs/api/#_maven_upload
    */
   def urlMavenDeploy() = {
     // PUT /maven/:subject/:repo/:package/:file_path[;publish=0/1]
     restApiUrl + "/maven/" + subject + "/" + repository + "/" + bintrayPackage;
+  }
+
+  /**
+   * Enumerate remote file content.
+   */
+  def urlContentDownload( relativePath : String ) = {
+    // https://dl.bintray.com/random-maven/maven/repository
+    downloadUrl + "/" + subject + "/" + repository + "/" + relativePath
+  }
+
+  /**
+   * Delete remote file content.
+   * For OSS, this action is limited for 180 days from the content’s publish date.
+   */
+  def urlContentDelete( relativePath : String ) = {
+    // DELETE /content/:subject/:repo/:file_path
+    restApiUrl + "/content/" + subject + "/" + repository + "/" + relativePath
   }
 
   /**
@@ -172,7 +197,6 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
 
   /**
    * Content publish url
-   * <p>
    * https://bintray.com/docs/api/#_publish_discard_uploaded_content
    */
   def urlContentPublish() = {
@@ -182,7 +206,6 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
 
   /**
    * Package descriptor url
-   * <p>
    * https://bintray.com/docs/api/#_get_package
    */
   def urlPackageGet() = {
@@ -191,8 +214,16 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
   }
 
   /**
+   * Get all files in a given package.
+   * https://bintray.com/docs/api/#_get_package_files
+   */
+  def urlPackageList() = {
+    // GET /packages/:subject/:repo/:package/files[?include_unpublished=0/1]
+    restApiUrl + "/packages/" + subject + "/" + repository + "/" + bintrayPackage + "/files";
+  }
+
+  /**
    * Package create url
-   * <p>
    * https://bintray.com/docs/api/#_create_package
    */
   def urlPackageCreate() = {
@@ -202,7 +233,6 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
 
   /**
    * Package delete url
-   * <p>
    * https://bintray.com/docs/api/#url_delete_package
    */
   def urlPackageDelete() = {
@@ -212,7 +242,6 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
 
   /**
    * Version descriptor url
-   * <p>
    * https://bintray.com/docs/api/#_get_version
    */
   def urlVersionGet( version : String ) = {
@@ -222,7 +251,6 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
 
   /**
    * Version delete url
-   * <p>
    * https://bintray.com/docs/api/#url_delete_version
    */
   def urlVersionDelete( version : String ) = {
@@ -231,22 +259,24 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
   }
 
   /**
-   * Render rest api response message.
+   * Render REST API response message.
    */
   def render( title : String, response : Response ) = {
-    title + " code=" + response.code() + " body=" + response.body().string();
+    title + " code=" + response.code() + " body=" + response.body().string()
   }
+
+  def regexPreserve : String = "(PRESERVE)"
 
   /**
    * Verify if version description contains magic regex.
    */
   def hasPreserve( version : String ) : Boolean = {
-    val versionJson = versionGet( version );
+    val versionJson = versionGet( version )
     val key = "desc";
     if ( versionJson.has( key ) ) {
       // Flatten content.
-      val description = versionJson.get( key ).toString();
-      if ( description.matches( preserveRegex ) ) {
+      val description = versionJson.get( key ).toString()
+      if ( description.matches( regexPreserve ) ) {
         return true;
       }
     }
@@ -257,40 +287,40 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    * Remove previous versions of artifacts from repository.
    */
   def contentCleanup() = {
-    getLog().info( "Cleaning package content: " + bintrayPackage );
-    val packageJson = packageGet();
-    val latest = packageJson.optString( "latest_version", "invalid_version" );
-    val versionList = packageJson.getJSONArray( "versions" );
+    getLog().info( "Cleaning package content: " + bintrayPackage )
+    val packageJson = packageGet()
+    val latest = packageJson.optString( "latest_version", "invalid_version" )
+    val versionList = packageJson.getJSONArray( "versions" )
     versionList.forEach( ( entry ) => {
       try {
-        val version = entry.toString();
+        val version = entry.toString()
         if ( !latest.equals( version ) ) {
           if ( hasPreserve( version ) ) {
-            getLog().info( "Keeping version: " + version );
+            getLog().info( "Keeping version: " + version )
           } else {
-            getLog().info( "Erasing version: " + version );
-            versionDelete( version );
+            getLog().info( "Erasing version: " + version )
+            versionDelete( version )
           }
         }
       } catch {
-        case e : Throwable => throw new RuntimeException( e );
+        case e : Throwable => throw new RuntimeException( e )
       }
-    } );
+    } )
   }
 
   /**
    * Mark deployed artifact as "published" for bintray consumption.
    */
   def contentPublish() = {
-    getLog().info( "Publishing package content: " + bintrayPackage );
-    val url = urlContentPublish();
+    getLog().info( "Publishing package content: " + bintrayPackage )
+    val url = urlContentPublish()
     val json = "{}";
-    val body = RequestBody.create( JSON, json );
-    val request = new Request.Builder().url( url ).post( body ).build();
-    val response = client.newCall( request ).execute();
+    val body = RequestBody.create( JSON, json )
+    val request = new Request.Builder().url( url ).post( body ).build()
+    val response = client.newCall( request ).execute()
     if ( response.code() != 200 ) {
-      getLog().error( render( "Publish content error", response ) );
-      throw new RuntimeException();
+      getLog().error( render( "Publish content error", response ) )
+      throw new RuntimeException()
     }
   }
 
@@ -302,17 +332,31 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
   }
 
   /**
+   * Delete remote content.
+   */
+  def contentCleanup( remote : String ) = {
+    val url = urlContentDelete( remote )
+    val builder = new Request.Builder().url( url ).delete()
+    val request = injectHeader( builder ).build()
+    val response = client.newCall( request ).execute()
+    if ( response.code() != 200 ) {
+      getLog().error( render( "Content delete error", response ) )
+      throw new RuntimeException()
+    }
+  }
+
+  /**
    * Upload file content. Requires header meta data.
    */
   def contentUpload( local : File, remote : String ) = {
     val url = urlContentUpload( remote )
     val body = RequestBody.create( BINARY, local )
-    val builder = new Request.Builder().url( url ).put( body );
+    val builder = new Request.Builder().url( url ).put( body )
     val request = injectHeader( builder ).build()
-    val response = client.newCall( request ).execute();
+    val response = client.newCall( request ).execute()
     if ( response.code() != 201 ) {
-      getLog().error( render( "Content upload error", response ) );
-      throw new RuntimeException();
+      getLog().error( render( "Content upload error", response ) )
+      throw new RuntimeException()
     }
   }
 
@@ -320,9 +364,9 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    * Verify bintray target package is present.
    */
   def hasPackage() : Boolean = {
-    val url = urlPackageGet();
-    val request = new Request.Builder().url( url ).build();
-    val response = client.newCall( request ).execute();
+    val url = urlPackageGet()
+    val request = new Request.Builder().url( url ).get().build()
+    val response = client.newCall( request ).execute()
     response.code() == 200;
   }
 
@@ -330,34 +374,76 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    * Fetch bintray target package description.
    */
   def packageGet() : JSONObject = {
-    val url = urlPackageGet();
-    val request = new Request.Builder().url( url ).build();
-    val response = client.newCall( request ).execute();
+    val url = urlPackageGet()
+    val request = new Request.Builder().url( url ).get().build()
+    val response = client.newCall( request ).execute()
     if ( response.code() != 200 ) {
-      getLog().error( render( "Package fetch error", response ) );
-      throw new RuntimeException();
+      getLog().error( render( "Package fetch error", response ) )
+      throw new RuntimeException()
     }
-    val data = response.body().string();
-    val json = new JSONObject( data );
-    json;
+    val data = response.body().string()
+    val json = new JSONObject( data )
+    json
+  }
+
+  /**
+   * Fetch bintray target package file list descriptors.
+   *
+   * Status: 200 OK
+   * [
+   * {
+   * "name": "nutcracker-1.1-sources.jar",
+   * "path": "org/jfrog/powerutils/nutcracker/1.1/nutcracker-1.1-sources.jar",
+   * "package": "jfrog-power-utils",
+   * "version": "1.1",
+   * "repo": "jfrog-jars",
+   * "owner": "jfrog",
+   * "created": "ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ)",
+   * "size": 1234,
+   * "sha1": "602e20176706d3cc7535f01ffdbe91b270ae5012"
+   * }
+   * ]
+   */
+  def packageList() : JSONArray = {
+    val url = urlPackageList()
+    val request = new Request.Builder().url( url ).get().build()
+    val response = client.newCall( request ).execute()
+    if ( response.code() != 200 ) {
+      getLog().error( render( "Package list error", response ) )
+      throw new RuntimeException()
+    }
+    val data = response.body().string()
+    val json = new JSONArray( data )
+    json
+  }
+
+  /**
+   * Fetch bintray target package file list descriptors.
+   */
+  def packageListPath() : Seq[ String ] = {
+    packageList().iterator.asScala.toSeq.map { entry =>
+      val jsonFile = entry.asInstanceOf[ JSONObject ]
+      val path = jsonFile.getString( "path" )
+      path
+    }
   }
 
   /**
    * Create bintray target package entry with required meta data.
    */
   def packageCreate() = {
-    val url = urlPackageCreate();
+    val url = urlPackageCreate()
     val json = new JSONObject() //
       .put( "name", bintrayPackage ) //
       .put( "vcs_url", packageVcsUrl ) //
       .put( "licenses", packageLicenses ) //
-      .toString();
-    val body = RequestBody.create( JSON, json );
-    val request = new Request.Builder().url( url ).post( body ).build();
-    val response = client.newCall( request ).execute();
+      .toString()
+    val body = RequestBody.create( JSON, json )
+    val request = new Request.Builder().url( url ).post( body ).build()
+    val response = client.newCall( request ).execute()
     if ( response.code() != 201 ) {
-      getLog().error( render( "Package create error", response ) );
-      throw new RuntimeException();
+      getLog().error( render( "Package create error", response ) )
+      throw new RuntimeException()
     }
   }
 
@@ -365,12 +451,12 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    * Delete bintray target package with all versions of artifacts.
    */
   def packageDelete() = {
-    val url = urlPackageGet();
-    val request = new Request.Builder().url( url ).build();
-    val response = client.newCall( request ).execute();
+    val url = urlPackageGet()
+    val request = new Request.Builder().url( url ).build()
+    val response = client.newCall( request ).execute()
     if ( response.code() != 200 ) {
-      getLog().error( render( "Package delete error", response ) );
-      throw new RuntimeException();
+      getLog().error( render( "Package delete error", response ) )
+      throw new RuntimeException()
     }
   }
 
@@ -379,10 +465,10 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    */
   def destroyPackage() = {
     if ( hasPackage() ) {
-      getLog().info( "Bintray package delete: ... " + bintrayPackage );
-      packageDelete();
+      getLog().info( "Bintray package delete: ... " + bintrayPackage )
+      packageDelete()
     } else {
-      getLog().info( "Bintray package is missing: " + bintrayPackage );
+      getLog().info( "Bintray package is missing: " + bintrayPackage )
     }
   }
 
@@ -391,10 +477,10 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    */
   def ensurePackage() = {
     if ( hasPackage() ) {
-      getLog().info( "Bintray package is present: " + bintrayPackage );
+      getLog().info( "Bintray package is present: " + bintrayPackage )
     } else {
-      getLog().info( "Bintray package create ...: " + bintrayPackage );
-      packageCreate();
+      getLog().info( "Bintray package create ...: " + bintrayPackage )
+      packageCreate()
     }
   }
 
@@ -402,15 +488,15 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    * Fetch bintray package version description.
    */
   def versionGet( version : String ) : JSONObject = {
-    val url = urlVersionGet( version );
-    val request = new Request.Builder().url( url ).get().build();
-    val response = client.newCall( request ).execute();
+    val url = urlVersionGet( version )
+    val request = new Request.Builder().url( url ).get().build()
+    val response = client.newCall( request ).execute()
     if ( response.code() != 200 ) {
-      getLog().error( render( "Version fetch error", response ) );
-      throw new RuntimeException();
+      getLog().error( render( "Version fetch error", response ) )
+      throw new RuntimeException()
     }
-    val data = response.body().string();
-    val json = new JSONObject( data );
+    val data = response.body().string()
+    val json = new JSONObject( data )
     json;
   }
 
@@ -418,12 +504,12 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    * Create bintray package version description with attached artifacts.
    */
   def versionCreate( version : String ) = { // FIXME
-    val url = urlVersionDelete( version );
-    val request = new Request.Builder().url( url ).delete().build();
-    val response = client.newCall( request ).execute();
+    val url = urlVersionDelete( version )
+    val request = new Request.Builder().url( url ).delete().build()
+    val response = client.newCall( request ).execute()
     if ( response.code() != 200 ) {
-      getLog().error( render( "Version create error", response ) );
-      throw new RuntimeException();
+      getLog().error( render( "Version create error", response ) )
+      throw new RuntimeException()
     }
   }
 
@@ -431,12 +517,12 @@ trait BintrayApi { self : BaseParams with AbstractMojo =>
    * Delete bintray package version description with attached artifacts.
    */
   def versionDelete( version : String ) = {
-    val url = urlVersionDelete( version );
-    val request = new Request.Builder().url( url ).delete().build();
-    val response = client.newCall( request ).execute();
+    val url = urlVersionDelete( version )
+    val request = new Request.Builder().url( url ).delete().build()
+    val response = client.newCall( request ).execute()
     if ( response.code() != 200 ) {
-      getLog().error( render( "Version delete error", response ) );
-      throw new RuntimeException();
+      getLog().error( render( "Version delete error", response ) )
+      throw new RuntimeException()
     }
   }
 

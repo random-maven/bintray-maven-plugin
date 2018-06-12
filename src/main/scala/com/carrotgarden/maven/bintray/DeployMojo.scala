@@ -16,7 +16,7 @@ import com.carrotgarden.maven.tools.Description
 
 @Description( """
 Deploy Maven build project artifacts to existing Bintray Maven repository.
-Goal operates via <a href="https://bintray.com/docs/api/">Bintray rest api</a>.
+Goal operates via <a href="https://bintray.com/docs/api/">Bintray REST API</a>.
 """ )
 @Mojo(
   name            = "deploy",
@@ -65,6 +65,15 @@ class DeployMojo extends AbstractDeployMojo
   var buildDirectory : String = _
 
   @Description( """
+  Deploy behaviour: during deployment cleanup, 
+  preserve versions with version description matching given Java regular expression.
+  """ )
+  @Parameter( property     = "bintray.preserveRegex", defaultValue = "(PRESERVE)" )
+  var preserveRegex : String = _
+
+  override def regexPreserve : String = preserveRegex
+
+  @Description( """
   Parameter used to control how many times a failed deployment will be retried
   before giving up and failing. If a value outside the range 1-10 is specified
   it will be pulled to the nearest value within the range 1-10.
@@ -74,16 +83,14 @@ class DeployMojo extends AbstractDeployMojo
 
   @Description( """
   Repository materialization factory.
-  """ )
-  // Note field name different from super.
+  """ ) // Note field name different from super.
   @Component
   var repositoryFactoryX : ArtifactRepositoryFactory = _
 
   @Description( """
   Repository layout definitions.
   """ )
-  @Component( role = classOf[ ArtifactRepositoryLayout ] )
-  // Note field name different from super.
+  @Component( role = classOf[ ArtifactRepositoryLayout ] ) // Note field name different from super.
   var repositoryLayoutsX : Map[ String, ArtifactRepositoryLayout ] = _
 
   /**

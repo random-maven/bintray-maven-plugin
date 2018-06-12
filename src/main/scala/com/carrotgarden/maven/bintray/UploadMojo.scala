@@ -9,11 +9,11 @@ import java.nio.file.Paths
 import okhttp3.Request
 
 import com.carrotgarden.maven.tools.Description
+import java.nio.file.Path
 
 @Description( """
 Upload local file content, such as Eclipse P2 repository to existing Bintray repository.
-Goal operates via <a href="https://bintray.com/docs/api/">Bintray rest api</a>.
-</a>.
+Goal operates via <a href="https://bintray.com/docs/api/">Bintray REST API</a>.
 """ )
 @Mojo(
   name            = "upload",
@@ -57,10 +57,34 @@ class UploadMojo extends AbstractMojo
   var bintrayExplode : String = _
 
   @Description( """
-  Execution step 3. Enable content upload from local directory.
+  Execution step 3. optionally enable content cleanup in remote repository.
+  Filter parameter: <a href="#cleanupRegex"><b>cleanupRegex</b></a>.
+  """ )
+  @Parameter( property     = "bintray.performCleanup", defaultValue = "true" )
+  var performCleanup : Boolean = _
+
+  @Description( """
+  Regular expression used to select files for cleanup.
+  Matched against remote file relative path.
+  Matches no files by default.
+  """ )
+  @Parameter( property     = "bintray.cleanupRegex", defaultValue = "" )
+  var cleanupRegex : String = _
+
+  @Description( """
+  Execution step 4. optionally enable content upload from local directory.
+  Filter parameter: <a href="#uploadRegex"><b>uploadRegex</b></a>.
   """ )
   @Parameter( property     = "bintray.performUpload", defaultValue = "true" )
   var performUpload : Boolean = _
+
+  @Description( """
+  Regular expression used to select files for upload.
+  Matched against local file absolute path.
+  Matches all files by default.
+  """ )
+  @Parameter( property     = "bintray.uploadRegex", defaultValue = """^.+$""" )
+  var uploadRegex : String = _
 
   /**
    * Content processing headers: override existing version, etc.
@@ -74,26 +98,50 @@ class UploadMojo extends AbstractMojo
   }
 
   /**
+   * Content cleanup in remote repository.
+   */
+  def cleanupContent() : Unit = {
+    getLog().info( s"Cleaning remote content matching '${cleanupRegex}' from '${bintrayPackage}'" )
+    if ( hasEmptyString( cleanupRegex ) ) {
+      return
+    }
+    val matcher = cleanupRegex.r.pattern.matcher( "" )
+    def hasMatch( path : String ) : Boolean = {
+      matcher.reset( path ).matches
+    }
+    packageListPath().filter( hasMatch( _ ) )
+      .foreach { remote =>
+        getLog().info( s"   Remote path: ${remote}" )
+        contentCleanup( remote )
+      }
+  }
+
+  /**
    * Construct remote upload path.
    */
   def remoteTarget( remote : String ) : String =
-    if ( targetFolder == null || targetFolder == "" ) {
+    if ( hasEmptyString( targetFolder ) ) {
       remote
     } else {
-      targetFolder + "/" + remote
+      s"${targetFolder}/${remote}"
     }
 
   /**
    * Upload file content from local directory.
    */
-  def uploadContent() = {
-    getLog().info( "Uploading file content: " + sourceFolder );
-    val root = sourceFolder.toPath()
-    Files.walk( root ).filter( Files.isRegularFile( _ ) )
+  def uploadContent() : Unit = {
+    getLog().info( s"Uploading local content matching '${uploadRegex}' from '${sourceFolder}'" )
+    require( !hasEmptyString( uploadRegex ), "Upload regex can not be empty." )
+    val matcher = uploadRegex.r.pattern.matcher( "" )
+    def hasMatch( path : Path ) : Boolean = {
+      Files.isRegularFile( path ) && matcher.reset( path.toAbsolutePath.toString ).matches
+    }
+    val root = sourceFolder.toPath
+    Files.walk( root ).filter( hasMatch( _ ) )
       .forEach { local =>
-        val remote = remoteTarget( root.relativize( local ).toString() )
-        getLog().info( "Remote path: " + remote );
-        contentUpload( local.toFile(), remote.toString() )
+        val remote = remoteTarget( root.relativize( local ).toString )
+        getLog().info( s"   Remote path: ${remote}" )
+        contentUpload( local.toFile, remote.toString )
       }
   }
 
@@ -103,6 +151,9 @@ class UploadMojo extends AbstractMojo
     }
     if ( performEnsure ) {
       ensurePackage()
+    }
+    if ( performCleanup ) {
+      cleanupContent()
     }
     if ( performUpload ) {
       uploadContent()

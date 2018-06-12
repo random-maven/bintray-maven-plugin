@@ -131,14 +131,7 @@ trait BaseParams {
   var repository : String = _
 
   @Description( """
-  Deploy behaviour: during deployment cleanup, 
-  preserve versions with version description matching given Java regular expression.
-  """ )
-  @Parameter( property     = "bintray.preserveRegex", defaultValue = "(PRESERVE)" )
-  var preserveRegex : String = _
-
-  @Description( """
-  Flat go skip all steps of the deployment execution.
+  Flag to skip all steps of the deployment execution.
   """ )
   @Parameter( property     = "bintray.skip", defaultValue = "false" )
   var skip : Boolean = _
