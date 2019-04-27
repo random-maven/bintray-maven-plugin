@@ -117,6 +117,7 @@ mvn clean deploy -P upload-bintray
 
                             <!-- Nominal permanent bintray identity. -->
                             <!-- Actual remote content will mirror local dir. -->
+                            <!-- These coordinates must be rotated to work around bintray policy. -->
                             <bintrayPackage>tracker</bintrayPackage>
                             <bintrayVersion>release</bintrayVersion>
 
