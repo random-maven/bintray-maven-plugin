@@ -42,7 +42,7 @@
 	</prerequisites>
 
 	<properties>
-		<release.epoch>1.4</release.epoch>
+		<release.epoch>1.5</release.epoch>
 		<version.maven>[3.5,3.6)</version.maven>
 		<bintray.subject>random-maven</bintray.subject>
 		<bintray.repository>maven</bintray.repository>
