@@ -16,8 +16,17 @@
 
     <url>http://test-2</url>
 
+    <!-- Verify basic deploy with forced cleanup. -->
+
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.carrotgarden.maven</groupId>
                 <artifactId>bintray-maven-plugin</artifactId>
@@ -27,6 +36,14 @@
                     <repository>maven</repository>
                     <performDestroy>true</performDestroy>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>bintray-deploy</id>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

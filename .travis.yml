@@ -1,7 +1,8 @@
 language: java
-dist: trusty
+dist: xenial
 jdk:
-- oraclejdk8
+- openjdk8
+- openjdk11
 cache:
   directories:
   - "$HOME/.m2"
@@ -13,7 +14,7 @@ install:
 - "/bin/true"
 script:
 - "/bin/cp -f ./.mvn/ci/settings.xml $HOME/.m2/settings.xml"
-- "/bin/cp -f ./.mvn/ci/toolchains.xml $HOME/.m2/toolchains.xml"
+#- "/bin/cp -f ./.mvn/ci/toolchains.xml $HOME/.m2/toolchains.xml"
 - "./.mvn/verify.sh || exit 1"
 - "./.mvn/release-bintray.sh || exit 1"
 - "./.mvn/wipe-repo.sh || exit 1"

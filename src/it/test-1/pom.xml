@@ -1,33 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.carrotgarden.a</groupId>
-        <artifactId>carrot-a</artifactId>
-        <version>0-SNAPSHOT</version>
-    </parent>
+	<parent>
+		<groupId>com.carrotgarden.a</groupId>
+		<artifactId>carrot-a</artifactId>
+		<version>0-SNAPSHOT</version>
+	</parent>
 
-    <groupId>com.carrotgarden.maven</groupId>
-    <artifactId>bintray-maven-plugin-test-1</artifactId>
-    <version>${revision}</version>
+	<groupId>com.carrotgarden.maven</groupId>
+	<artifactId>bintray-maven-plugin-test-1</artifactId>
+	<version>${revision}</version>
 
-    <url>http://test-1</url>
+	<url>http://test-1</url>
+	
+	<!-- Verify basic deploy with auto cleanup. -->
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.carrotgarden.maven</groupId>
-                <artifactId>bintray-maven-plugin</artifactId>
-                <version>@project.version@</version>
-                <configuration>
-                    <subject>random-maven</subject>
-                    <repository>maven</repository>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.carrotgarden.maven</groupId>
+				<artifactId>bintray-maven-plugin</artifactId>
+				<version>@project.version@</version>
+				<configuration>
+					<subject>random-maven</subject>
+					<repository>maven</repository>
+				</configuration>
+				<executions>
+					<execution>
+						<id>bintray-deploy</id>
+						<goals>
+							<goal>deploy</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.carrotgarden.a</groupId>
+		<artifactId>carrot-a</artifactId>
+		<version>0-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.carrotgarden.maven</groupId>
+	<artifactId>bintray-maven-plugin-test-4</artifactId>
+	<version>${revision}</version>
+
+	<url>http://test-3</url>
+
+	<!-- Verify destroy, deploy, upload, cleanup. -->
+
+	<build>
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>com.carrotgarden.maven</groupId>
+				<artifactId>bintray-maven-plugin</artifactId>
+				<version>@project.version@</version>
+				<executions>
+					<execution>
+						<id>deploy</id>
+						<goals>
+							<goal>deploy</goal>
+						</goals>
+						<configuration>
+							<subject>random-maven</subject>
+							<repository>maven</repository>
+							<performDestroy>true</performDestroy>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>com.carrotgarden.maven</groupId>
+				<artifactId>bintray-maven-plugin</artifactId>
+				<version>@project.version@</version>
+				<executions>
+					<execution>
+						<id>upload</id>
+						<goals>
+							<goal>upload</goal>
+						</goals>
+						<configuration>
+							<subject>random-maven</subject>
+							<repository>maven</repository>
+							<sourceFolder>${project.basedir}/repository</sourceFolder>
+							<targetFolder>${project.artifactId}</targetFolder>
+							<bintrayPackage>${project.artifactId}</bintrayPackage>
+							<bintrayVersion>${project.artifactId}</bintrayVersion>
+							<performDestroy>true</performDestroy>
+							<cleanupRegex>.*folder3.*</cleanupRegex>
+							<uploadRegex>^.*readme[.]md$</uploadRegex>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
