@@ -18,6 +18,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 import scala.collection.JavaConverters._
+import scala.util.control.NonFatal
 
 import com.carrotgarden.maven.tools.Description
 import java.io.IOException
@@ -317,10 +318,11 @@ trait BintrayApi {
     val json = "{}";
     val body = RequestBody.create( JSON, json )
     val request = new Request.Builder().url( url ).post( body ).build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 200 ) {
-      getLog().error( render( "Publish content error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) { response =>
+      if (response.code() != 200) {
+        getLog().error(render("Publish content error", response))
+        throw new RuntimeException()
+      }
     }
   }
 
@@ -338,10 +340,11 @@ trait BintrayApi {
     val url = urlContentDelete( remote )
     val builder = new Request.Builder().url( url ).delete()
     val request = injectHeader( builder ).build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 200 ) {
-      getLog().error( render( "Content delete error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) {response =>
+      if ( response.code() != 200 ) {
+        getLog().error( render( "Content delete error", response ) )
+        throw new RuntimeException()
+      }
     }
   }
 
@@ -353,10 +356,11 @@ trait BintrayApi {
     val body = RequestBody.create( BINARY, local )
     val builder = new Request.Builder().url( url ).put( body )
     val request = injectHeader( builder ).build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 201 ) {
-      getLog().error( render( "Content upload error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall(request).execute()) { response =>
+      if (response.code() != 201) {
+        getLog().error(render("Content upload error", response))
+        throw new RuntimeException()
+      }
     }
   }
 
@@ -366,8 +370,9 @@ trait BintrayApi {
   def hasPackage() : Boolean = {
     val url = urlPackageGet()
     val request = new Request.Builder().url( url ).get().build()
-    val response = client.newCall( request ).execute()
-    response.code() == 200;
+    withResource(client.newCall( request ).execute()) { response =>
+      response.code() == 200;
+    }
   }
 
   /**
@@ -376,14 +381,15 @@ trait BintrayApi {
   def packageGet() : JSONObject = {
     val url = urlPackageGet()
     val request = new Request.Builder().url( url ).get().build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 200 ) {
-      getLog().error( render( "Package fetch error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) { response =>
+      if (response.code() != 200) {
+        getLog().error(render("Package fetch error", response))
+        throw new RuntimeException()
+      }
+      val data = response.body().string()
+      val json = new JSONObject(data)
+      json
     }
-    val data = response.body().string()
-    val json = new JSONObject( data )
-    json
   }
 
   /**
@@ -407,14 +413,15 @@ trait BintrayApi {
   def packageList() : JSONArray = {
     val url = urlPackageList()
     val request = new Request.Builder().url( url ).get().build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 200 ) {
-      getLog().error( render( "Package list error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) { response =>
+      if ( response.code() != 200 ) {
+        getLog().error( render( "Package list error", response ) )
+        throw new RuntimeException()
+      }
+      val data = response.body().string()
+      val json = new JSONArray( data )
+      json
     }
-    val data = response.body().string()
-    val json = new JSONArray( data )
-    json
   }
 
   /**
@@ -440,10 +447,11 @@ trait BintrayApi {
       .toString()
     val body = RequestBody.create( JSON, json )
     val request = new Request.Builder().url( url ).post( body ).build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 201 ) {
-      getLog().error( render( "Package create error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) { response =>
+      if (response.code() != 201) {
+        getLog().error(render("Package create error", response))
+        throw new RuntimeException()
+      }
     }
   }
 
@@ -453,10 +461,11 @@ trait BintrayApi {
   def packageDelete() = {
     val url = urlPackageGet()
     val request = new Request.Builder().url( url ).build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 200 ) {
-      getLog().error( render( "Package delete error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) { response =>
+      if (response.code() != 200) {
+        getLog().error(render("Package delete error", response))
+        throw new RuntimeException()
+      }
     }
   }
 
@@ -490,14 +499,15 @@ trait BintrayApi {
   def versionGet( version : String ) : JSONObject = {
     val url = urlVersionGet( version )
     val request = new Request.Builder().url( url ).get().build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 200 ) {
-      getLog().error( render( "Version fetch error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) { response =>
+      if (response.code() != 200) {
+        getLog().error(render("Version fetch error", response))
+        throw new RuntimeException()
+      }
+      val data = response.body().string()
+      val json = new JSONObject(data)
+      json
     }
-    val data = response.body().string()
-    val json = new JSONObject( data )
-    json;
   }
 
   /**
@@ -506,10 +516,11 @@ trait BintrayApi {
   def versionCreate( version : String ) = { // FIXME
     val url = urlVersionDelete( version )
     val request = new Request.Builder().url( url ).delete().build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 200 ) {
-      getLog().error( render( "Version create error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) { response =>
+      if (response.code() != 200) {
+        getLog().error(render("Version create error", response))
+        throw new RuntimeException()
+      }
     }
   }
 
@@ -519,10 +530,39 @@ trait BintrayApi {
   def versionDelete( version : String ) = {
     val url = urlVersionDelete( version )
     val request = new Request.Builder().url( url ).delete().build()
-    val response = client.newCall( request ).execute()
-    if ( response.code() != 200 ) {
-      getLog().error( render( "Version delete error", response ) )
-      throw new RuntimeException()
+    withResource(client.newCall( request ).execute()) { response =>
+      if (response.code() != 200) {
+        getLog().error(render("Version delete error", response))
+        throw new RuntimeException()
+      }
+    }
+  }
+
+  private def withResource[T <: AutoCloseable, V](r: => T)(f: T => V): V = {
+    val resource: T = r
+    require(resource != null, "resource is null")
+    var exception: Throwable = null
+    try {
+      f(resource)
+    } catch {
+      case NonFatal(e) =>
+        exception = e
+        throw e
+    } finally {
+      closeAndAddSuppressed(exception, resource)
+    }
+  }
+
+  private def closeAndAddSuppressed(e: Throwable, resource: AutoCloseable): Unit = {
+    if (e != null) {
+      try {
+        resource.close()
+      } catch {
+        case NonFatal(suppressed) =>
+          e.addSuppressed(suppressed)
+      }
+    } else {
+      resource.close()
     }
   }
 
