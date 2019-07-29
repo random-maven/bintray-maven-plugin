@@ -353,6 +353,7 @@ trait BintrayApi {
    */
   def contentUpload( local : File, remote : String ) = {
     val url = urlContentUpload( remote )
+    getLog.info(s"Uploading: $url ...")
     val body = RequestBody.create( BINARY, local )
     val builder = new Request.Builder().url( url ).put( body )
     val request = injectHeader( builder ).build()
