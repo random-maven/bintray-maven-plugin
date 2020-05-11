@@ -11,11 +11,11 @@
 	</parent>
 
 	<groupId>com.carrotgarden.maven</groupId>
-	<artifactId>bintray-maven-plugin-test-1</artifactId>
+	<artifactId>bintray-maven-plugin-test-1-1</artifactId>
 	<version>${revision}</version>
 
 	<url>http://test-1</url>
-	
+
 	<!-- Verify basic deploy with auto cleanup. -->
 
 	<build>

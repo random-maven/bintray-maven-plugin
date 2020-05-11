@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.carrotgarden.maven</groupId>
-    <artifactId>bintray-maven-plugin-test-2</artifactId>
+    <artifactId>bintray-maven-plugin-test-2-1</artifactId>
     <version>${revision}</version>
 
     <url>http://test-2</url>
